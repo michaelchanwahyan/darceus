@@ -7,7 +7,8 @@ target_mem=$(echo "$mem * 0.9" | bc) # if you run to error, install bc
 docker run -dt \
            --name=sleepy_arceus \
            --memory="$target_mem"g \
+           -p 9999:9999 \
            -v /data:/data \
            -v /app:/app \
            darceus:latest \
-           bash
+           /bin/bash /startup.sh

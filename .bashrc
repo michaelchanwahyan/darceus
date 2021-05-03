@@ -155,4 +155,9 @@ alias             yp3='python3'
 alias        baretail='tail -f'
 alias        killtask='kill -9 '
 
+alias            gits='git status'
+alias            gitd='git diff'
+alias            gitb='git branch'
+alias         githist='git log --graph --oneline --decorate --color'
+
 loop() { while true ; do clear ; "$1" ; "$2" ; "$3" ; sleep 1 ; done }
