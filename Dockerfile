@@ -63,6 +63,7 @@ RUN apt-get -y update ;\
         screen \
         sl \
         software-properties-common \
+        unzip \
         vim \
         wget
 
@@ -92,6 +93,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install \
         libicu-dev \
         libjpeg-dev \
         libjsoncpp-dev \
+        liblas-dev \
         libmpfr-dev \
         libopenni-dev \
         libopenni2-dev \
@@ -129,9 +131,6 @@ RUN cd /SOURCE ;\
     tar --bzip2 -xf eigen-3.2.8.tar.bz2 ; rm -f eigen-3.2.8.tar.bz2 ; mv eigen-3.2.8 eigen_3_2_8 ;\
     cd eigen_3_2_8 ; mkdir build ; cd build ; /SOURCE/cmake_3_10_2/bin/cmake -DCMAKE_BUILD_TYPE=Release .. ; make -j8 ; make install
 
-RUN apt-get -y install \
-        unzip
-
 RUN cd /SOURCE ;\
     wget -O flann_1_8_4-src.zip https://src.fedoraproject.org/lookaside/extras/flann/flann-1.8.4-src.zip/a0ecd46be2ee11a68d2a7d9c6b4ce701/flann-1.8.4-src.zip ;\
     unzip flann_1_8_4-src.zip ; rm -f flann_1_8_4-src.zip ; mv flann-1.8.4-src flann_1_8_4 ;\
@@ -151,7 +150,7 @@ RUN cd /SOURCE ;\
 #     part 3c
 #   laslib library
 # =================
-RUN apt-get -y install liblas-dev
+#RUN apt-get -y install liblas-dev
 #RUN cd /SOURCE ;\
 #    wget https://github.com/libLAS/libLAS/archive/refs/tags/1.8.1.tar.gz ;\
 #    tar -zxvf 1.8.1.tar.gz ; rm -f 1.8.1.tar.gz ; mv libLAS-1.8.1 liblas
