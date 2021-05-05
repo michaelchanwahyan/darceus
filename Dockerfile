@@ -307,6 +307,4 @@ RUN echo /usr/local/lib >> /etc/ld.so.conf ;\
 
 COPY [ ".bashrc" , ".vimrc" , "/root/" ]
 
-COPY [ "startup.sh"         , "/"      ]
-
 CMD [ "/bin/bash" ]
