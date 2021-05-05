@@ -24,9 +24,9 @@ ENV SHELL=/bin/bash \
     SPARK_HOME=/spark-2.4.0-bin-hadoop2.7 \
     SPARK_PATH=/spark-2.4.0-bin-hadoop2.7 \
     YARN_HOME=/hadoop-2.7.7 \
-    PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin:/usr/lib:/usr/local/lib:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build:/SOURCE/arceus/build:/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib \
-    LD_LIBRARY_PATH=/usr/local/lib:/SOURCE/arceus/build:/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/languages/cpp/lib:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build \
-    LIBRARY_PATH=/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/languages/cpp/lib:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build \
+    PATH=/bin:/usr/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin:/usr/lib:/usr/local/lib:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build:/SOURCE/arceus/build:/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib:/SOURCE/libLAS/build/bin/Release \
+    LD_LIBRARY_PATH=/usr/local/lib:/SOURCE/arceus/build:/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib:/SOURCE/libLAS/build/bin/Release:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/languages/cpp/lib:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build \
+    LIBRARY_PATH=/SOURCE/pcl/build:/SOURCE/pcl/build/lib:/SOURCE/vtk_7_1_0/build:/SOURCE/vtk_7_1_0/build/lib:/SOURCE/libLAS/build/bin/Release:/SOURCE/udsdk/include:/SOURCE/udsdk/lib/ubuntu18.04_GCC_x64:/SOURCE/udsdksamples/languages/cpp/lib:/SOURCE/udsdksamples/external/stb:/SOURCE/udsdksamples/external/udcore/Include:/SOURCE/udsdksamples/languages/cpp/build \
     CPLUS_INCLUDE_PATH=/SOURCE/arceus \
     BOOST_SYSTEM_LIBRARY=/SOURCE/boost-1.61.0/bin.v2/libs
 
@@ -93,7 +93,6 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install \
         libicu-dev \
         libjpeg-dev \
         libjsoncpp-dev \
-        liblas-dev \
         libmpfr-dev \
         libopenni-dev \
         libopenni2-dev \
@@ -150,11 +149,9 @@ RUN cd /SOURCE ;\
 #     part 3c
 #   laslib library
 # =================
-#RUN apt-get -y install liblas-dev
-#RUN cd /SOURCE ;\
-#    wget https://github.com/libLAS/libLAS/archive/refs/tags/1.8.1.tar.gz ;\
-#    tar -zxvf 1.8.1.tar.gz ; rm -f 1.8.1.tar.gz ; mv libLAS-1.8.1 liblas
-#    cd liblas ; mkdir build ; cd build ; /SOURCE/cmake_3_10_2/bin/cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ../ ; make -j8 ; make install
+RUN cd /SOURCE ;\
+    git clone --depth 1 https://github.com/michaelchanwahyan/libLAS.git ;\
+    cd libLAS ; mkdir build ; cd build ; /SOURCE/cmake_3_10_2/bin/cmake -DCMAKE_BUILD_TYPE=Release .. ; make -j8 ; make install
 
 # =================
 #     part 4
@@ -163,15 +160,7 @@ RUN cd /SOURCE ;\
 RUN git clone https://github.com/michaelchanwahyan/jdk1.8.0_171 ;\
     git clone https://github.com/michaelchanwahyan/spark-2.4.0-bin-hadoop2.7 ;\
     git clone https://github.com/michaelchanwahyan/hadoop-2.7.7 ;\
-    mkdir /gcs-connector-hadoop ;\
-    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list ;\
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - ;\
     apt-get -y update ;\
-    apt-get -y install google-cloud-sdk ;\
-    wget https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop2.jar ;\
-    mv   gcs-connector-latest-hadoop2.jar       /gcs-connector-hadoop/ ;\
-    echo export     HADOOP_CLASSPATH=/gcs-connector-hadoop/gcs-connector-latest-hadoop2.jar >> /hadoop-2.7.7/etc/hadoop/hadoop-env.sh ;\
-    echo spark.driver.extraClassPath /gcs-connector-hadoop/gcs-connector-latest-hadoop2.jar >> $SPARK_HOME/conf/spark-defaults.conf ;\
     echo spark.driver.memory                    5g                                          >> $SPARK_HOME/conf/spark-defaults.conf ;\
     echo spark.driver.maxResultSize             5g                                          >> $SPARK_HOME/conf/spark-defaults.conf ;\
     echo spark.driver.allowMultipleContexts     True                                        >> $SPARK_HOME/conf/spark-defaults.conf
@@ -193,61 +182,120 @@ RUN cd / ;\
     pip3 install --upgrade pip
 
 RUN pip3 install \
-        ipython==7.16.1 \
-        ipywidgets==7.4.1 \
-        jupyter-client==6.1.7 \
-        jupyter-console==6.2.0 \
-        jupyter-core==4.6.3 \
-        jupyter==1.0.0 \
-        jupyterlab-launcher==0.13.1 \
-        jupyterlab==2.2.6 \
-        nbconvert==5.6.1 \
-        protobuf==3.13.0
-
-RUN pip3 install \
-        Cython==0.29.21 \
-        Pillow==7.2.0 \
-        anytree==2.8.0 \
-        arrow==0.16.0 \
-        django-file-md5==1.0.3 \
-        findspark==1.4.2 \
-        folium==0.11.0 \
-        gensim==3.8.3 \
-        h5py==2.10.0 \
-        lxml==4.5.2 \
-        matplotlib-venn==0.11.5 \
-        matplotlib==3.3.1 \
-        networkx==2.5 \
-        numpy==1.19.1 \
-        pandas==1.1.1 \
-        pattern3==3.0.0 \
-        pyspark==3.0.0 \
-        scikit-image==0.17.2 \
-        scikit-learn==0.23.2 \
-        scipy==1.5.2 \
-        seaborn==0.10.1
-
-RUN pip3 install \
-        astcheck==0.2.5 \
-        astsearch==0.2.0 \
-        cvxpy==1.1.5 \
-        ecos==2.0.7.post1 \
-        fastcache==1.1.0 \
-        implicit==0.4.2 \
-        jieba==0.42.1 \
-        laspy==1.7.0 \
-        multiprocess==0.70.10 \
-        nltk==3.5 \
-        open3d-python==0.7.0.0 \
-        opencv-python==4.4.0.42 \
-        osqp==0.6.1 \
-        plotly==4.9.0 \
-        plyfile==0.7.2 \
-        pptk==0.1.0 \
-        python-pcl==0.3.0a1 \
-        scs==2.1.2 \
-        setuptools==56.0.0 \
-        toolz==0.10.0
+    anyio==2.2.0 \
+    argon2-cffi==20.1.0 \
+    arrow==1.1.0 \
+    async-generator==1.10 \
+    attrs==20.3.0 \
+    Babel==2.9.1 \
+    backcall==0.2.0 \
+    bleach==3.3.0 \
+    certifi==2020.12.5 \
+    cffi==1.14.5 \
+    chardet==4.0.0 \
+    click==7.1.2 \
+    contextvars==2.4 \
+    cycler==0.10.0 \
+    Cython==0.29.23 \
+    dataclasses==0.8 \
+    decorator==4.4.2 \
+    defusedxml==0.7.1 \
+    deprecation==2.1.0 \
+    dill==0.3.3 \
+    entrypoints==0.3 \
+    findspark==1.4.2 \
+    gensim==4.0.1 \
+    idna==2.10 \
+    imageio==2.9.0 \
+    immutables==0.15 \
+    importlib-metadata==4.0.1 \
+    ipykernel==5.5.3 \
+    ipython==7.16.1 \
+    ipython-genutils==0.2.0 \
+    ipywidgets==7.6.3 \
+    jedi==0.18.0 \
+    Jinja2==2.11.3 \
+    joblib==1.0.1 \
+    json5==0.9.5 \
+    jsonschema==3.2.0 \
+    jupyter==1.0.0 \
+    jupyter-client==6.1.12 \
+    jupyter-console==6.4.0 \
+    jupyter-core==4.7.1 \
+    jupyter-packaging==0.9.2 \
+    jupyter-server==1.6.4 \
+    jupyterlab==3.0.14 \
+    jupyterlab-launcher==0.13.1 \
+    jupyterlab-pygments==0.1.2 \
+    jupyterlab-server==2.5.0 \
+    jupyterlab-widgets==1.0.0 \
+    kiwisolver==1.3.1 \
+    laspy==1.7.0 \
+    lxml==4.6.3 \
+    MarkupSafe==1.1.1 \
+    matplotlib==3.3.4 \
+    matplotlib-venn==0.11.6 \
+    mistune==0.8.4 \
+    multiprocess==0.70.11.1 \
+    nbclassic==0.2.7 \
+    nbclient==0.5.3 \
+    nbconvert==6.0.7 \
+    nbformat==5.1.3 \
+    nest-asyncio==1.5.1 \
+    networkx==2.5.1 \
+    nltk==3.6.2 \
+    notebook==6.3.0 \
+    numpy==1.19.5 \
+    opencv-python==4.5.1.48 \
+    packaging==20.9 \
+    pandocfilters==1.4.3 \
+    parso==0.8.2 \
+    pexpect==4.8.0 \
+    pickleshare==0.7.5 \
+    Pillow==8.2.0 \
+    plotly==4.14.3 \
+    plyfile==0.7.4 \
+    pptk==0.1.0 \
+    prometheus-client==0.10.1 \
+    prompt-toolkit==3.0.18 \
+    ptyprocess==0.7.0 \
+    py4j==0.10.9 \
+    pycparser==2.20 \
+    Pygments==2.9.0 \
+    pyparsing==2.4.7 \
+    pyrsistent==0.17.3 \
+    pyspark==3.1.1 \
+    python-dateutil==2.8.1 \
+    pytz==2021.1 \
+    PyWavelets==1.1.1 \
+    pyzmq==22.0.3 \
+    qtconsole==5.1.0 \
+    QtPy==1.9.0 \
+    regex==2021.4.4 \
+    requests==2.25.1 \
+    retrying==1.3.3 \
+    scikit-image==0.17.2 \
+    scikit-learn==0.24.2 \
+    scipy==1.5.4 \
+    Send2Trash==1.5.0 \
+    six==1.15.0 \
+    smart-open==5.0.0 \
+    sniffio==1.2.0 \
+    terminado==0.9.4 \
+    testpath==0.4.4 \
+    threadpoolctl==2.1.0 \
+    tifffile==2020.9.3 \
+    tomlkit==0.7.0 \
+    toolz==0.11.1 \
+    tornado==6.1 \
+    tqdm==4.60.0 \
+    traitlets==4.3.3 \
+    typing-extensions==3.10.0.0 \
+    urllib3==1.26.4 \
+    wcwidth==0.2.5 \
+    webencodings==0.5.1 \
+    widgetsnbextension==3.5.1 \
+    zipp==3.4.1
 
 RUN jupyter nbextension enable --py widgetsnbextension ;\
     jupyter serverextension enable --py jupyterlab
