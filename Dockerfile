@@ -65,7 +65,8 @@ RUN apt-get -y update ;\
         software-properties-common \
         unzip \
         vim \
-        wget
+        wget \
+        zip
 
 # =================
 #     part 2b
